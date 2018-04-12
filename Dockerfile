@@ -88,8 +88,11 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     fi && \
     curl ${PARAMS} -L -o eXo-Platform-${EXO_VERSION}.zip ${DOWNLOAD_URL} && \
     unzip -q eXo-Platform-${EXO_VERSION}.zip -d /tmp/ && \
+    ls /tmp/ && \
     rm -f eXo-Platform-${EXO_VERSION}.zip && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
+    ls ${EXO_APP_DIR} && \
+    ls ${EXO_APP_DIR}/bin && \
     mkdir -p ${EXO_CONF_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR}
