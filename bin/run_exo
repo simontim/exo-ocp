@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+if [ "${1:0:1}" != '-' ]; then
+  exec "$@"
+fi
+
+echo "**** Setting up EXO Data Volume"
+echo "**** Checking if logs directory exists in data"
+if [ ! -d "/opt/exo/data/logs" ];
+then
+  echo "**** Initial Setup"
+  # For initial setup move extensions into the data directory (on a PVC)
+  mv /opt/exo/logs /opt/exo/data
+else
+  echo "**** Secondary Setup"
+  # For secondary setup just remove the extensions directory from /opt/sonarqube
+  # The contents are already in /opt/sonarqube/data/extensions which will be linked
+  # back into /opt/sonarqube
+  rm -rf /opt/exo/logs
+  if [ ! -f /opt/exo/data/es/nodes/0/node.lock ]
+  then
+    rm -f /opt/exo/data/es/nodes/0/node.lock
+  fi
+fi
+# Now link the extensions from the PVC into the expected location
+ln -s /opt/exo/data/logs /opt/exo
+
+
+if ! whoami &> /dev/null; then
+  if [ -w /etc/passwd ]; then
+    echo "Setting runtime User ... "
+    sed 's@exo:x:1001:@exo:x:'$(id -u)':@g' /etc/passwd.template > /etc/passwd
+  fi
+fi
+
+# Finally start Exo Platform
+exec /opt/exo/start_eXo.sh "$@"
