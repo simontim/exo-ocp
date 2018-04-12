@@ -67,9 +67,6 @@ ENV EXO_USER exo
 # (we use 999 as uid like in official Docker images)
 #RUN useradd --create-home -u 999 --user-group --shell /bin/bash ${EXO_USER}
 
-RUN useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
-    cat /etc/passwd > /etc/passwd.template
-
 # giving all rights to eXo user
 #RUN echo "exo   ALL = NOPASSWD: ALL" > /etc/sudoers.d/exo && chmod 440 /etc/sudoers.d/exo
 
@@ -88,20 +85,18 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     fi && \
     curl ${PARAMS} -L -o eXo-Platform-${EXO_VERSION}.zip ${DOWNLOAD_URL} && \
     unzip -q eXo-Platform-${EXO_VERSION}.zip -d /tmp/ && \
-    ls /tmp/ && \
     rm -f eXo-Platform-${EXO_VERSION}.zip && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
-    ls ${EXO_APP_DIR} && \
-    ls ${EXO_APP_DIR}/bin && \
     mkdir -p ${EXO_CONF_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR}
 
+RUN useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
+    cat /etc/passwd > /etc/passwd.template
+
 COPY bin/setenv-docker-customize.sh ${EXO_APP_DIR}/bin/
 COPY bin/run_exo ${EXO_APP_DIR}/bin/
 COPY bin/wait-for-it.sh ${EXO_APP_DIR}/bin/
-
-RUN ls ${EXO_APP_DIR}/bin/
 
 # Install Docker customization file
 RUN chmod 755 ${EXO_APP_DIR}/bin/setenv-docker-customize.sh && \
