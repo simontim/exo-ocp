@@ -86,9 +86,9 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
       EXO_VERSION_SHORT=$(echo ${EXO_VERSION} | awk -F "\." '{ print $1"."$2}'); \
       DOWNLOAD_URL="https://downloads.exoplatform.org/public/releases/platform/${EXO_VERSION_SHORT}/${EXO_VERSION}/platform-${EXO_VERSION}.zip"; \
     fi && \
-    curl ${PARAMS} -L -o /tmp/eXo-Platform-${EXO_VERSION}.zip ${DOWNLOAD_URL} && \
-    unzip -q /tmp/eXo-Platform-${EXO_VERSION}.zip -d /tmp/ && \
-    rm -f /tmp/eXo-Platform-${EXO_VERSION}.zip && \
+    curl ${PARAMS} -L -o eXo-Platform-${EXO_VERSION}.zip ${DOWNLOAD_URL} && \
+    unzip -q eXo-Platform-${EXO_VERSION}.zip -d /tmp/ && \
+    rm -f eXo-Platform-${EXO_VERSION}.zip && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
     mkdir -p ${EXO_CONF_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
