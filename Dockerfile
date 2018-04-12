@@ -89,14 +89,11 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
     mkdir -p ${EXO_CONF_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
-    ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR}
-
-RUN useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
+    ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR} && \
+    useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
     cat /etc/passwd > /etc/passwd.template
 
-COPY bin/setenv-docker-customize.sh ${EXO_APP_DIR}/bin/
-COPY bin/run_exo ${EXO_APP_DIR}/bin/
-COPY bin/wait-for-it.sh ${EXO_APP_DIR}/bin/
+COPY bin/ ${EXO_APP_DIR}/bin
 
 # Install Docker customization file
 RUN chmod 755 ${EXO_APP_DIR}/bin/setenv-docker-customize.sh && \
@@ -149,8 +146,10 @@ RUN wget -q --no-cookies --no-check-certificate \
 RUN for a in ${ADDONS}; do echo "Installing addon $a"; /opt/exo/addon install $a; done
 
 RUN chmod -R a+rwx ${EXO_APP_DIR} && \ 
-    chown -R sonar:0 ${EXO_APP_DIR} && \
+    chown -R exo:0 ${EXO_APP_DIR} && \
     chmod -R g=u /etc/passwd
+
+ENV PATH=$PATH:${EXO_APP_DIR}/bin
 
 USER 1001
 
