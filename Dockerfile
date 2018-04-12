@@ -94,7 +94,9 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR}
 
-COPY bin/ ${EXO_APP_DIR}/bin
+ADD bin/setenv-docker-customize.sh ${EXO_APP_DIR}/bin/setenv-docker-customize.sh
+ADD bin/run_exo ${EXO_APP_DIR}/bin/run_exo
+ADD bin/wait-for-it.sh ${EXO_APP_DIR}/bin/wait-for-it.sh
 
 # Install Docker customization file
 RUN chmod 755 ${EXO_APP_DIR}/bin/setenv-docker-customize.sh && \
