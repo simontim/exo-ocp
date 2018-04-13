@@ -145,7 +145,7 @@ esac
 [ -z "${EXO_CHAT_SERVER_PASSPHRASE}" ] && EXO_CHAT_SERVER_PASSPHRASE="something2change"
 
 [ -z "${EXO_ES_EMBEDDED}" ] && EXO_ES_EMBEDDED="true"
-[ -z "${EXO_ES_EMBEDDED_DATA}" ] && EXO_ES_EMBEDDED_DATA="/srv/exo/es"
+[ -z "${EXO_ES_EMBEDDED_DATA}" ] && EXO_ES_EMBEDDED_DATA="${EXO_DATA_DIR}/es"
 [ -z "${EXO_ES_SCHEME}" ] && EXO_ES_SCHEME="http"
 [ -z "${EXO_ES_HOST}" ] && EXO_ES_HOST="localhost"
 [ -z "${EXO_ES_PORT}" ] && EXO_ES_PORT="9200"
