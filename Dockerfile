@@ -56,7 +56,7 @@ ENV EXO_CONF_DIR           /opt/exo/etc
 ENV EXO_DATA_DIR           /opt/exo/data
 #ENV EXO_SHARED_DATA_DIR    /srv/exo/shared
 ENV EXO_SHARED_DATA_DIR    /opt/exo/data/shared
-ENV EXO_ES_EMBEDDED_DATA   /opt/exo/data/es
+#ENV EXO_ES_EMBEDDED_DATA   /opt/exo/data/es
 ENV EXO_LOG_DIR            /opt/exo/logs
 ENV EXO_TMP_DIR            /opt/exo/exo-tmp
 
