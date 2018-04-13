@@ -11,7 +11,7 @@
 # -----------------------------------------------------------------------------
 
 replace_in_file() {
-  local _tmpFile=$(mktemp /tmp/replace.XXXXXXXXXX) || { echo "Failed to create temp file"; exit 1; }
+  local _tmpFile=$(mktemp ${EXO_TMP_DIR}/replace.XXXXXXXXXX) || { echo "Failed to create temp file"; exit 1; }
   mv $1 ${_tmpFile}
   sed "s|$2|$3|g" ${_tmpFile} > $1
   rm ${_tmpFile}
@@ -164,7 +164,8 @@ EXO_ES_URL="${EXO_ES_SCHEME}://${EXO_ES_HOST}:${EXO_ES_PORT}"
 
 [ -z "${EXO_CLUSTER}" ] && EXO_CLUSTER="false"
 [ -z "${EXO_CLUSTER_NODE_NAME}" ] && EXO_CLUSTER_NODE_NAME="${HOSTNAME}"
-[ -z "${EXO_CLUSTER_HOSTS}" ] && EXO_CLUSTER_HOSTS="-"
+#[ -z "${EXO_CLUSTER_HOSTS}" ] && EXO_CLUSTER_HOSTS="-"
+[ -z "${EXO_CLUSTER_HOSTS}" ] && EXO_CLUSTER_HOSTS="${HOSTNAME}"
 [ -z "${EXO_JGROUPS_ADDR}" ] && EXO_JGROUPS_ADDR="GLOBAL"
 
 [ -z $EXO_PROFILES ] && EXO_PROFILES="all"
@@ -198,6 +199,7 @@ else
       cat /opt/exo/conf/server-hsqldb.xml > /opt/exo/conf/server.xml
       ;;
     mysql)
+      replace_in_file /opt/exo/conf/server-mysql.xml "jdbc:mysql://localhost:3306/plf?autoReconnect=true" "jdbc:mysql://localhost:3306/plf?autoReconnect=true&amp;useSSL=false"
       cat /opt/exo/conf/server-mysql.xml > /opt/exo/conf/server.xml
       replace_in_file /opt/exo/conf/server.xml "jdbc:mysql://localhost:3306/plf" "jdbc:mysql://${EXO_DB_HOST}:${EXO_DB_PORT}/${EXO_DB_NAME}"
       replace_in_file /opt/exo/conf/server.xml 'username="plf" password="plf"' 'username="'${EXO_DB_USER}'" password="'${EXO_DB_PASSWORD}'"'

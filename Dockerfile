@@ -89,7 +89,7 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR} && \
-    useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
+    useradd -m -u 1001 -g 0 -m -s /usr/sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
     cat /etc/passwd > /etc/passwd.template
 
 COPY bin/ ${EXO_APP_DIR}/bin
