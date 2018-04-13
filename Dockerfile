@@ -87,7 +87,6 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     unzip -q eXo-Platform-${EXO_VERSION}.zip -d /tmp/ && \
     rm -f eXo-Platform-${EXO_VERSION}.zip && \
     mv /tmp/${ARCHIVE_BASE_DIR} ${EXO_APP_DIR} && \
-    mkdir -p ${EXO_CONF_DIR} && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR} && \
     useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
