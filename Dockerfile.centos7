@@ -92,8 +92,6 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
 
 COPY bin/ ${EXO_APP_DIR}/bin
 
-ENV JAVA_HOME dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g'
-
 # Install Docker customization file
 RUN chmod 755 ${EXO_APP_DIR}/bin/setenv-docker-customize.sh && \
     chown ${EXO_USER}:0 ${EXO_APP_DIR}/bin/setenv-docker-customize.sh && \
