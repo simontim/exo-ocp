@@ -23,7 +23,6 @@ RUN yum install -y ${NUX_DESKTOP_RELEASE}
 
 RUN INSTALL_PACKAGES="unzip wget vim-enhanced tzdata nano gettext nss_wrapper curl sed which less java-1.8.0-openjdk xmlstarlet jq libreoffice-calc libreoffice-draw libreoffice-impress libreoffice-math libreoffice-writer msttcore-fonts-installer" && \
     yum install -y --setopt=tsflags=nodocs $INSTALL_PACKAGES && \
-    rpm -V $INSTALL_PACKAGES && \
     yum clean all && \
     rm -rf /var/cache/yum
 
