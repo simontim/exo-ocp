@@ -47,31 +47,17 @@ ARG ADDONS="exo-jdbc-driver-mysql:1.1.0"
 ARG ARCHIVE_BASE_DIR=platform-${EXO_VERSION}
 
 ENV EXO_APP_DIR            /opt/exo
-#ENV EXO_CONF_DIR           /etc/exo
 ENV EXO_CONF_DIR           /opt/exo/etc
-#ENV EXO_DATA_DIR           /srv/exo
 ENV EXO_DATA_DIR           /opt/exo/data
-#ENV EXO_SHARED_DATA_DIR    /srv/exo/shared
 ENV EXO_SHARED_DATA_DIR    /opt/exo/data/shared
-#ENV EXO_ES_EMBEDDED_DATA   /opt/exo/data/es
 ENV EXO_LOG_DIR            /opt/exo/logs
 ENV EXO_TMP_DIR            /opt/exo/exo-tmp
 
 ENV EXO_USER exo
-#ENV EXO_GROUP ${EXO_USER}
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 # (we use 999 as uid like in official Docker images)
 #RUN useradd --create-home -u 999 --user-group --shell /bin/bash ${EXO_USER}
-
-# giving all rights to eXo user
-#RUN echo "exo   ALL = NOPASSWD: ALL" > /etc/sudoers.d/exo && chmod 440 /etc/sudoers.d/exo
-
-# Create needed directories
-#RUN mkdir -p ${EXO_DATA_DIR}         && chown ${EXO_USER}:0 ${EXO_DATA_DIR} && \
-#    mkdir -p ${EXO_SHARED_DATA_DIR}  && chown ${EXO_USER}:0 ${EXO_SHARED_DATA_DIR} && \
-#    mkdir -p ${EXO_TMP_DIR}          && chown ${EXO_USER}:0 ${EXO_TMP_DIR}  && \
-#    mkdir -p ${EXO_LOG_DIR}          && chown ${EXO_USER}:0 ${EXO_LOG_DIR}
 
 # Install eXo Platform
 RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
@@ -87,7 +73,7 @@ RUN if [ -n "${DOWNLOAD_USER}" ]; then PARAMS="-u ${DOWNLOAD_USER}"; fi && \
     mkdir -p ${EXO_DATA_DIR} && \ 
     mkdir -p ${EXO_TMP_DIR} && \
     ln -s ${EXO_APP_DIR}/gatein/conf ${EXO_CONF_DIR} && \
-    useradd -m -u 1001 -g 0 -m -s /usr/sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
+    useradd -m -u 1001 -g 0 -m -s /sbin/nologin -d ${EXO_APP_DIR} ${EXO_USER} && \
     cat /etc/passwd > /etc/passwd.template
 
 COPY bin/ ${EXO_APP_DIR}/bin
