@@ -162,7 +162,7 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
-        dockerfilePath: Dockerfile
+        dockerfilePath: Dockerfile.centos7
       type: Docker
     triggers:
     - github:
@@ -236,16 +236,6 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 4
-          readinessProbe:
-            httpGet:
-              path: /portal
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 120
-            timeoutSeconds: 4
-            periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 3
           name: ${EXO_SERVICE_NAME}
           ports:
           - containerPort: 9000
@@ -456,13 +446,13 @@ parameters:
   displayName: Namespace
   name: NAMESPACE
   value: openshift
-- description: Maximum amount of memory the container can use.
-  displayName: Memory Limit
+- description: Maximum amount of memory the MySQL container can use.
+  displayName: MySQL Memory Limit
   name: MYSQL_MEMORY_LIMIT
   required: true
   value: 512Mi
-- description: The name of the OpenShift Service exposed for the database.
-  displayName: Database Service Name
+- description: The name of the OpenShift Service exposed for the MySQL database.
+  displayName: MySQL Database Service Name
   name: MYSQL_DATABASE_SERVICE_NAME
   required: true
   value: mysql
@@ -492,8 +482,8 @@ parameters:
   name: MYSQL_DATABASE
   required: true
   value: exo
-- description: Volume space available for data, e.g. 512Mi, 2Gi.
-  displayName: Volume Capacity
+- description: Volume space available for MySQL data, e.g. 512Mi, 2Gi.
+  displayName: MySQL Volume Capacity
   name: MYSQL_VOLUME_CAPACITY
   required: true
   value: 1Gi
@@ -502,13 +492,13 @@ parameters:
   name: MYSQL_VERSION
   required: true
   value: "5.7"
-- description: Maximum amount of memory the container can use.
-  displayName: Memory Limit
+- description: Maximum amount of memory the MongoDB container can use.
+  displayName: MongoDB Memory Limit
   name: MONGODB_MEMORY_LIMIT
   required: true
   value: 512Mi
-- description: The name of the OpenShift Service exposed for the database.
-  displayName: Database Service Name
+- description: The name of the OpenShift Service exposed for the MongoDB database.
+  displayName: MongoDB Database Service Name
   name: MONGODB_DATABASE_SERVICE_NAME
   required: true
   value: mongo
@@ -538,8 +528,8 @@ parameters:
   name: MONGODB_ADMIN_PASSWORD
   required: true
   value: exo
-- description: Volume space available for data, e.g. 512Mi, 2Gi.
-  displayName: Volume Capacity
+- description: Volume space available for MongoDB data, e.g. 512Mi, 2Gi.
+  displayName: MongoDB Volume Capacity
   name: MONGODB_VOLUME_CAPACITY
   required: true
   value: 1Gi
