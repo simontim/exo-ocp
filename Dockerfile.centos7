@@ -111,7 +111,7 @@ RUN wget -q --no-cookies --no-check-certificate \
   --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
   -O "/tmp/jai.tar.gz" "http://download.oracle.com/otn-pub/java/jai/1.1.2_01-fcs/jai-1_1_2_01-lib-linux-i586.tar.gz" \
   && cd "/tmp" \
-  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')"
+  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')" \
   && tar --no-same-owner -xvf "/tmp/jai.tar.gz" \
   && mv -v /tmp/jai-*/lib/jai_*.jar "$JAVA_HOME/jre/lib/ext/" \
   && mv -v /tmp/jai-*/*-jai.txt "$JAVA_HOME/" \
@@ -126,7 +126,7 @@ RUN wget -q --no-cookies --no-check-certificate \
   --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
   -O "/tmp/jai_imageio.tar.gz" "http://download.oracle.com/otn-pub/java/jai_imageio/1.0_01/jai_imageio-1_0_01-lib-linux-i586.tar.gz" \
   && cd "/tmp" \
-  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')"
+  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')" \
   && tar --no-same-owner -xvf "/tmp/jai_imageio.tar.gz" \
   && mv -v /tmp/jai_imageio-*/lib/jai_*.jar "$JAVA_HOME/jre/lib/ext/" \
   && mv -v /tmp/jai_imageio-*/*-jai_imageio.txt "$JAVA_HOME/" \
@@ -138,7 +138,7 @@ RUN wget -q --no-cookies --no-check-certificate \
   --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
   -O "/tmp/jai_ccm.tar.gz" "http://download.oracle.com/otn-pub/java/jai_jaicmm/1.0/JAICMM.tar.gz" \
   && cd "/tmp" \
-  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')"
+  && JAVA_HOME="$(dirname $(readlink $(readlink $(which java)))|sed 's/jre\/bin//g')" \
   && tar --no-same-owner -xvf "/tmp/jai_ccm.tar.gz" \
   && mv -v /tmp/*.pf "$JAVA_HOME/jre/lib/cmm/" \
   && rm -rf /tmp/*
