@@ -238,7 +238,7 @@ objects:
             timeoutSeconds: 4
           name: ${EXO_SERVICE_NAME}
           ports:
-          - containerPort: 9000
+          - containerPort: 8080
             protocol: TCP
           resources:
             limits:
@@ -565,4 +565,4 @@ parameters:
 - description: A space separated list of add-ons to install.
   displayName: ExoPlatform add-ons to install.
   name: EXO_ADDONS_LIST
-  value: exo-jdbc-driver-mysql exo-chat
+  value: exo-jdbc-driver-mysql, exo-chat
