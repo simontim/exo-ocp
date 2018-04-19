@@ -308,7 +308,9 @@ objects:
           - name: EXO_ES_EMBEDDED
             value: "false"
           - name: EXO_ES_HOST
-            value: "${ES_SERVICE_NAME}"             
+            value: "${ES_SERVICE_NAME}"
+          - name: EXO_REGISTRATION
+            value: "false"
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
