@@ -433,6 +433,8 @@ else
 
       # JCR configuration
       add_in_exo_configuration "gatein.jcr.config.type=cluster"
+      # All JCR values are stored as BLOBs in the database.
+      add_in_exo_configuration "exo.jcr.storage.enabled=false"
       # TODO allow to customize this
       add_in_exo_configuration "gatein.jcr.index.changefilterclass=org.exoplatform.services.jcr.impl.core.query.ispn.LocalIndexChangesFilter"
 
