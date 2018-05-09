@@ -1,0 +1,802 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  labels:
+    name: exo-platform
+  annotations:
+    description: EXO Platform OpenShift template
+    openshift.io/display-name: ExoPlatform + MySQL + MongoDB + ElasticSearch
+    tags: instant-app,exo-platform
+  name: exo-platform
+message: "Deploy EXO-Platform in Openshift Container Platform"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    annotations:
+      template.openshift.io/expose-database_name: '{.data[''database-name'']}'
+      template.openshift.io/expose-password: '{.data[''database-password'']}'
+      template.openshift.io/expose-root_password: '{.data[''database-root-password'']}'
+      template.openshift.io/expose-username: '{.data[''database-user'']}'
+    name: ${MYSQL_DATABASE_SERVICE_NAME}
+  stringData:
+    database-name: ${MYSQL_DATABASE}
+    database-password: ${MYSQL_PASSWORD}
+    database-root-password: ${MYSQL_ROOT_PASSWORD}
+    database-user: ${MYSQL_USER}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    annotations:
+      template.openshift.io/expose-admin_password: '{.data[''database-admin-password'']}'
+      template.openshift.io/expose-database_name: '{.data[''database-name'']}'
+      template.openshift.io/expose-password: '{.data[''database-password'']}'
+      template.openshift.io/expose-username: '{.data[''database-user'']}'
+    name: ${MONGODB_DATABASE_SERVICE_NAME}
+  stringData:
+    database-admin-password: ${MONGODB_ADMIN_PASSWORD}
+    database-name: ${MONGODB_DATABASE}
+    database-password: ${MONGODB_PASSWORD}
+    database-user: ${MONGODB_USER}    
+- apiVersion: v1
+  kind: Route
+  metadata:
+    creationTimestamp: null
+    name: ${EXO_SERVICE_NAME}
+  spec:
+    host: ${EXO_HOSTNAME}
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge  
+    to:
+      kind: Service
+      name: ${EXO_SERVICE_NAME}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/dependencies: '[{"name":"${MYSQL_DATABASE_SERVICE_NAME}","namespace":"","kind":"Service"}, {"name":"${MONGODB_DATABASE_SERVICE_NAME}","namespace":"","kind":"Service"}, {"name":"${ES_SERVICE_NAME}","namespace":"","kind":"Service"}]'
+    name: ${EXO_SERVICE_NAME}
+  spec:
+    ports:
+    - name: 8080-tcp
+      nodePort: 0
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: ${EXO_SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+      description: "The JGroups ping port for clustering."
+    name: ${EXO_SERVICE_NAME}-ping
+    labels:
+      application: ${EXO_SERVICE_NAME}
+  spec:
+    clusterIP: None
+    ports:
+    - name: ping
+      port: 8888
+    selector:
+      deploymentConfig: ${EXO_SERVICE_NAME}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+    name: ${MYSQL_DATABASE_SERVICE_NAME}
+  spec:
+    ports:
+    - name: mysql
+      port: 3306
+    selector:
+      name: ${MYSQL_DATABASE_SERVICE_NAME}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      template.openshift.io/expose-uri: mongodb://{.spec.clusterIP}:{.spec.ports[?(.name=="mongo")].port}
+    name: ${MONGODB_DATABASE_SERVICE_NAME}
+  spec:
+    ports:
+    - name: mongo
+      nodePort: 0
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      name: ${MONGODB_DATABASE_SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${ES_SERVICE_NAME}
+  spec:
+    ports:
+    - name: 9200-tcp
+      nodePort: 0
+      port: 9200
+      protocol: TCP
+      targetPort: 9200
+    - name: 9300-tcp
+      nodePort: 0
+      port: 9300
+      protocol: TCP
+      targetPort: 9300
+    selector:
+      name: ${ES_SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${EXO_SERVICE_NAME}-data
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${EXO_VOLUME_CAPACITY}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${MYSQL_DATABASE_SERVICE_NAME}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${MYSQL_VOLUME_CAPACITY}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${MONGODB_DATABASE_SERVICE_NAME}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${MONGODB_VOLUME_CAPACITY}
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${ES_SERVICE_NAME}-data
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: ${ES_VOLUME_CAPACITY}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      application: ${EXO_SERVICE_NAME}
+    name: ${EXO_SERVICE_NAME}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      application: ${ES_SERVICE_NAME}
+    name: ${ES_SERVICE_NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: ${EXO_SERVICE_NAME}
+      appName: ${EXO_SERVICE_NAME}
+    name: ${EXO_SERVICE_NAME}
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${EXO_SERVICE_NAME}:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      contextDir: /
+      git:
+        uri: https://github.com/rcangiamila/exo-ocp.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: Dockerfile.centos7
+      type: Docker
+    triggers:
+    - github:
+        secret: tu5UyJNNhAyxXYrcnDTZ
+      type: GitHub
+    - generic:
+        secret: xhUU0WVDG3eA2Yu89zGe
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: ${ES_SERVICE_NAME}
+      appName: ${ES_SERVICE_NAME}
+    name: ${ES_SERVICE_NAME}
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${ES_SERVICE_NAME}:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      contextDir: /
+      git:
+        uri: https://github.com/rcangiamila/elasticsearch-ocp.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        dockerfilePath: Dockerfile
+      type: Docker
+    triggers:
+    - github:
+        secret: tu5UyJNNhAyxXYrcnDTZ
+      type: GitHub
+    - generic:
+        secret: xhUU0WVDG3eA2Yu89zGe
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      creationTimestamp: null
+      name: ${EXO_SERVICE_NAME}
+    name: ${EXO_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${EXO_SERVICE_NAME}
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          name: ${EXO_SERVICE_NAME}
+      spec:
+        containers:
+        - env:
+          - name: EXO_DB_TYPE
+            value: "mysql"
+          - name: EXO_DB_NAME
+            value: "${MYSQL_DATABASE}"          
+          - name: EXO_DB_USER
+            value: "${MYSQL_USER}"
+          - name: EXO_DB_PASSWORD
+            value: "${MYSQL_PASSWORD}"
+          - name: EXO_DB_HOST
+            value: "${MYSQL_DATABASE_SERVICE_NAME}"
+          - name: EXO_ADDONS_LIST
+            value: "${EXO_ADDONS_LIST}"
+          - name: EXO_MONGO_HOST
+            value: "${MONGODB_DATABASE_SERVICE_NAME}"
+          - name: EXO_MONGO_DB_NAME
+            value: "${MONGODB_DATABASE}"
+          - name: EXO_MONGO_USERNAME
+            value: "${MONGODB_USER}"
+          - name: EXO_MONGO_PASSWORD
+            value: "${MONGODB_PASSWORD}"
+          - name: EXO_ADDONS_REMOVE_LIST
+            value: "exo-es-embedded"
+          - name: EXO_ES_EMBEDDED
+            value: "false"
+          - name: EXO_ES_HOST
+            value: "${ES_SERVICE_NAME}"
+          - name: EXO_REGISTRATION
+            value: "false"
+          - name: EXO_CLUSTER
+            value: "true"
+          - name: OPENSHIFT_KUBE_PING_LABELS
+            value: application=${EXO_SERVICE_NAME}
+          - name: OPENSHIFT_KUBE_PING_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /portal
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 900
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 4
+          name: ${EXO_SERVICE_NAME}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+            name: 8080-tcp
+          - containerPort: 8888
+            protocol: TCP
+            name: ping
+          resources:
+            limits:
+              cpu: ${EXO_CPU_LIMIT}
+              memory: ${EXO_MEMORY_LIMIT}
+            requests:
+              cpu: 500m
+              memory: "1Gi"
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/exo/data
+            name: ${EXO_SERVICE_NAME}-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: ${EXO_SERVICE_NAME}-data
+          persistentVolumeClaim:
+            claimName: ${EXO_SERVICE_NAME}-data
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${EXO_SERVICE_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${EXO_SERVICE_NAME}:latest
+      type: ImageChange
+  status: {}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
+    name: ${MYSQL_DATABASE_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${MYSQL_DATABASE_SERVICE_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${MYSQL_DATABASE_SERVICE_NAME}
+      spec:
+        containers:
+        - env:
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: ${MYSQL_DATABASE_SERVICE_NAME}
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: ${MYSQL_DATABASE_SERVICE_NAME}
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-root-password
+                name: ${MYSQL_DATABASE_SERVICE_NAME}
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                key: database-name
+                name: ${MYSQL_DATABASE_SERVICE_NAME}
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 3306
+            timeoutSeconds: 1
+          name: mysql
+          ports:
+          - containerPort: 3306
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE
+                -e 'SELECT 1'
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: ${MYSQL_MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /var/lib/mysql/data
+            name: ${MYSQL_DATABASE_SERVICE_NAME}-data
+        volumes:
+        - name: ${MYSQL_DATABASE_SERVICE_NAME}-data
+          persistentVolumeClaim:
+            claimName: ${MYSQL_DATABASE_SERVICE_NAME}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mysql
+        from:
+          kind: ImageStreamTag
+          name: mysql:${MYSQL_VERSION}
+          namespace: ${NAMESPACE}
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
+    name: ${MONGODB_DATABASE_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${MONGODB_DATABASE_SERVICE_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          name: ${MONGODB_DATABASE_SERVICE_NAME}
+      spec:
+        containers:
+        - capabilities: {}
+          env:
+          - name: MONGODB_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: ${MONGODB_DATABASE_SERVICE_NAME}
+          - name: MONGODB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: ${MONGODB_DATABASE_SERVICE_NAME}
+          - name: MONGODB_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-admin-password
+                name: ${MONGODB_DATABASE_SERVICE_NAME}
+          - name: MONGODB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                key: database-name
+                name: ${MONGODB_DATABASE_SERVICE_NAME}
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017
+            timeoutSeconds: 1
+          name: mongodb
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
+                --eval="quit()"
+            initialDelaySeconds: 3
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: ${MONGODB_MEMORY_LIMIT}
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/mongodb/data
+            name: ${MONGODB_DATABASE_SERVICE_NAME}-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+        - name: ${MONGODB_DATABASE_SERVICE_NAME}-data
+          persistentVolumeClaim:
+            claimName: ${MONGODB_DATABASE_SERVICE_NAME}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mongodb
+        from:
+          kind: ImageStreamTag
+          name: mongodb:${MONGODB_VERSION}
+          namespace: ${NAMESPACE}
+        lastTriggeredImage: ""
+      type: ImageChange
+    - type: ConfigChange
+  status: {}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      creationTimestamp: null
+      name: ${ES_SERVICE_NAME}
+    name: ${ES_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${ES_SERVICE_NAME}
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          name: ${ES_SERVICE_NAME}
+      spec:
+        containers:
+        - capabilities: {}
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 9200
+              scheme: HTTP
+            initialDelaySeconds: 900
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 4
+          name: ${ES_SERVICE_NAME}
+          ports:
+          - containerPort: 9200
+            protocol: TCP
+          - containerPort: 9300
+            protocol: TCP
+          resources:
+            limits:
+              cpu: ${ES_CPU_LIMIT}
+              memory: ${ES_MEMORY_LIMIT}
+            requests:
+              cpu: 500m
+              memory: "1Gi"
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/elasticsearch/data
+            name: ${ES_SERVICE_NAME}-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: ${ES_SERVICE_NAME}-data
+          persistentVolumeClaim:
+            claimName: ${ES_SERVICE_NAME}-data
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${ES_SERVICE_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${ES_SERVICE_NAME}:latest
+      type: ImageChange
+  status: {}
+parameters:
+- description: The OpenShift Namespace where the ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  value: openshift
+- description: Maximum amount of memory the MySQL container can use.
+  displayName: MySQL Memory Limit
+  name: MYSQL_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The name of the OpenShift Service exposed for the MySQL database.
+  displayName: MySQL Database Service Name
+  name: MYSQL_DATABASE_SERVICE_NAME
+  required: true
+  value: mysql
+- description: Username for MySQL user that will be used for accessing the database.
+  displayName: MySQL Connection Username
+  from: user[A-Z0-9]{3}
+  generate: expression
+  name: MYSQL_USER
+  required: true
+  value: exo
+- description: Password for the MySQL connection user.
+  displayName: MySQL Connection Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: MYSQL_PASSWORD
+  required: true
+  value: exo
+- description: Password for the MySQL root user.
+  displayName: MySQL root user Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: MYSQL_ROOT_PASSWORD
+  required: true
+  value: exo
+- description: Name of the MySQL database accessed.
+  displayName: MySQL Database Name
+  name: MYSQL_DATABASE
+  required: true
+  value: exo
+- description: Volume space available for MySQL data, e.g. 512Mi, 2Gi.
+  displayName: MySQL Volume Capacity
+  name: MYSQL_VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- description: Version of MySQL image to be used (5.5, 5.6, 5.7, or latest).
+  displayName: Version of MySQL Image
+  name: MYSQL_VERSION
+  required: true
+  value: "5.7"
+- description: Maximum amount of memory the MongoDB container can use.
+  displayName: MongoDB Memory Limit
+  name: MONGODB_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The name of the OpenShift Service exposed for the MongoDB database.
+  displayName: MongoDB Database Service Name
+  name: MONGODB_DATABASE_SERVICE_NAME
+  required: true
+  value: mongo
+- description: Username for MongoDB user that will be used for accessing the database.
+  displayName: MongoDB Connection Username
+  from: user[A-Z0-9]{3}
+  generate: expression
+  name: MONGODB_USER
+  required: true
+  value: exo
+- description: Password for the MongoDB connection user.
+  displayName: MongoDB Connection Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: MONGODB_PASSWORD
+  required: true
+  value: exo
+- description: Name of the MongoDB database accessed.
+  displayName: MongoDB Database Name
+  name: MONGODB_DATABASE
+  required: true
+  value: chat
+- description: Password for the database admin user.
+  displayName: MongoDB Admin Password
+  from: '[a-zA-Z0-9]{16}'
+  generate: expression
+  name: MONGODB_ADMIN_PASSWORD
+  required: true
+  value: exo
+- description: Volume space available for MongoDB data, e.g. 512Mi, 2Gi.
+  displayName: MongoDB Volume Capacity
+  name: MONGODB_VOLUME_CAPACITY
+  required: true
+  value: 1Gi
+- description: Version of MongoDB image to be used (2.4, 2.6, 3.2 or latest).
+  displayName: Version of MongoDB Image
+  name: MONGODB_VERSION
+  required: true
+  value: "3.2"
+- description: Number of virtual CPUs to allocate for Exo.
+  displayName: ExoPlatform CPU limit
+  name: EXO_CPU_LIMIT
+  required: true
+  value: "2"
+- description: The maximum amount of memory that the Exo application is allowed to use (Min is 512Mi)
+  displayName: ExoPlatform Memory Limit
+  name: EXO_MEMORY_LIMIT
+  required: true
+  value: 2Gi
+- description: The name of the ExoPlatform Service exposed for the route.
+  displayName: ExoPlatform Service Name
+  name: EXO_SERVICE_NAME
+  required: true
+  value: exo
+- description: ExoPlatform Volume space available for data, e.g. 512Mi, 2Gi.
+  displayName: ExoPlatform volume capacity
+  name: EXO_VOLUME_CAPACITY
+  required: true
+  value: 2Gi
+- description: The exposed hostname that will route to the ExoPlatform service, if left
+    blank a value will be defaulted.
+  displayName: ExoPlatform Hostname
+  name: EXO_HOSTNAME
+- description: A space separated list of add-ons to install.
+  displayName: ExoPlatform add-ons to install.
+  name: EXO_ADDONS_LIST
+  value: exo-jdbc-driver-mysql, exo-chat
+- description: Number of virtual CPUs to allocate for Elasticsearch.
+  displayName: Elasticsearch CPU limit
+  name: ES_CPU_LIMIT
+  required: true
+  value: "2"
+- description: The maximum amount of memory that the Elasticsearch application is allowed to use (Min is 512Mi)
+  displayName: Elasticsearch Memory Limit
+  name: ES_MEMORY_LIMIT
+  required: true
+  value: 2Gi
+- description: The name of the Elasticsearch Service exposed for the route.
+  displayName: Elasticsearch Service Name
+  name: ES_SERVICE_NAME
+  required: true
+  value: elasticsearch
+- description: Elasticsearch Volume space available for data, e.g. 512Mi, 2Gi.
+  displayName: Elasticsearch volume capacity
+  name: ES_VOLUME_CAPACITY
+  required: true
+  value: 2Gi
+- description: Elasticsearch cluster name.
+  displayName: Elasticsearch cluster name
+  name: ES_CLUSTER_NAME
+  required: true
+  value: elasticsearch
+- description: Elasticsearch minimum number of master-eligible nodes.
+  displayName: Elasticsearch number of master nodes
+  name: ES_NUMBER_OF_MASTERS
+  required: true
+  value: "1"
+- description: Elasticsearch network bind.
+  displayName: Elasticsearch network bind
+  name: ES_NETWORK_HOST
+  required: true
+  value: 0.0.0.0
+- description: Elasticsearch publish host.
+  displayName: Elasticsearch publish host.
+  name: ES_PUBLISH_HOST
+- description: Elasticsearch loopback addresses bind.
+  displayName: Elasticsearch loopback addresses bind.
+  name: ES_UNICAST_HOSTS
+  value: "127.0.0.1, [::1]"
