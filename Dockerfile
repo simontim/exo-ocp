@@ -27,12 +27,13 @@ RUN INSTALL_PACKAGES="unzip wget vim-enhanced tzdata nano gettext nss_wrapper cu
     rm -rf /var/cache/yum
 
 # Check if the released binary was modified and make the build fail if it is the case
-RUN wget -q -O /usr/bin/yaml https://github.com/mikefarah/yaml/releases/download/1.10/yaml_linux_amd64 && \
-  echo "0e24302f71a14518dcc1bcdc6ff8d7da /usr/bin/yaml" | md5sum -c - \
-  || { \
-    echo "ERROR: the [/usr/bin/yaml] binary downloaded from a github release was modified while is should not !!"; \
-    return 1; \
-  } && chmod a+x /usr/bin/yaml
+RUN wget -q -O /usr/bin/yaml https://github.com/mikefarah/yaml/releases/tag/v2.4.0 && chmod a+x /usr/bin/yaml
+#RUN wget -q -O /usr/bin/yaml https://github.com/mikefarah/yaml/releases/tag/v2.4.0 && \
+#  echo "0e24302f71a14518dcc1bcdc6ff8d7da /usr/bin/yaml" | md5sum -c - \
+#  || { \
+#    echo "ERROR: the [/usr/bin/yaml] binary downloaded from a github release was modified while is should not !!"; \
+#    return 1; \
+#  } && chmod a+x /usr/bin/yaml
 
 # Build Arguments and environment variables
 ARG EXO_VERSION=5.1.0
