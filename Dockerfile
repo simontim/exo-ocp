@@ -35,10 +35,10 @@ RUN wget -q -O /usr/bin/yaml https://github.com/mikefarah/yaml/releases/download
   } && chmod a+x /usr/bin/yaml
 
 # Build Arguments and environment variables
-ARG EXO_VERSION=5.0.0
+ARG EXO_VERSION=5.1.0
 
 # this allow to specify an eXo Platform download url
-ARG DOWNLOAD_URL
+ARG DOWNLOAD_URL=http://192.168.196.7/sw/timwork/2.0/exo-${EXO_VERSION}/platform-${EXO_VERSION}.zip
 # this allow to specifiy a user to download a protected binary
 ARG DOWNLOAD_USER
 # allow to override the list of addons to package by default
