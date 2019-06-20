@@ -130,7 +130,7 @@ RUN wget -q --no-cookies --no-check-certificate \
   && mv -v /tmp/*.pf "$JAVA_HOME/jre/lib/cmm/" \
   && rm -rf /tmp/*
 
-RUN for a in ${ADDONS}; do echo "Installing addon $a"; /opt/exo/addon install $a; done
+#RUN for a in ${ADDONS}; do echo "Installing addon $a"; /opt/exo/addon install $a; done
 
 RUN chmod -R a+rwx ${EXO_APP_DIR} && \ 
     chown -R exo:0 ${EXO_APP_DIR} && \
